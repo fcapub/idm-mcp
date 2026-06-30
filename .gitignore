@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+
+# Agent wallet — contains the agent's secret key, never commit
+agent_wallet.json
+
+# Claude Code personal settings (machine-specific, do not commit)
+.claude/settings.local.json
+
+# Secrets / key material — never commit
+.env
+.env.*
+*.pem
+*.key
+
+# macOS
+.DS_Store
