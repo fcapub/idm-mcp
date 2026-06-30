@@ -78,6 +78,19 @@ claude mcp add idm-mcp -- uv --directory /path/to/idm_mcp run python main.py
 
 (For stdio, set `transport = 'stdio'` in `main()`.)
 
+## Generating a keypair
+
+The tools operate on an Ed25519 keypair that the agent owns. To generate one, run:
+
+```bash
+uv run python keygen.py
+# Public Key: <64 hex chars>
+# Secret Key: <64 hex chars>
+```
+
+The **public key** (hex) is what you pass as `pk` to `get_did`. Keep the
+**secret key** with the agent — it is never sent to the server.
+
 ## Tools
 
 ### `get_did(entity_type, pk, pktype, description="", protocol="", transparency="")`
@@ -120,7 +133,8 @@ signature. Returns `{"valid": bool, "issuer": ..., "subjectId": ..., "reason": .
 ## Example flow
 
 An MCP client — an agent, Claude Code, or the MCP Inspector — calls the tools in
-sequence. The agent supplies its own Ed25519 public key (hex) when requesting a DID.
+sequence. The agent supplies its own Ed25519 public key (hex) when requesting a
+DID (see [Generating a keypair](#generating-a-keypair)).
 
 1. **`get_did`** — request a DID for the agent:
    ```json
