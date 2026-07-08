@@ -73,13 +73,27 @@ To change the transport, edit the `transport` variable in `main()` (`"stdio"` or
 
 ### Using it from Claude Code
 
-Register the server as a stdio MCP server:
+**The transport set in `main()` must match how you register the server.** Pick one:
+
+> Current default in `main()`: **streamable-http** (Option B).
+
+**Option A — stdio** (Claude Code launches the server for you). Set
+`transport = 'stdio'` in `main()`, then:
 
 ```bash
 claude mcp add idm-mcp -- uv --directory /path/to/idm_mcp run python main.py
 ```
 
-(For stdio, set `transport = 'stdio'` in `main()`.)
+**Option B — streamable-http** (you run the server yourself). Keep
+`transport = 'streamable-http'` in `main()`, start it with `uv run python main.py`,
+then register its URL:
+
+```bash
+claude mcp add --transport http idm-mcp http://127.0.0.1:8000/mcp
+```
+
+> Mismatching these fails silently: registering stdio while `main()` serves HTTP
+> means Claude Code waits for stdio messages that never come, and vice versa.
 
 ## Generating a keypair
 
