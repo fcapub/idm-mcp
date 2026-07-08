@@ -159,14 +159,36 @@ DID (see [Generating a keypair](#generating-a-keypair)).
 The quickest way to try this by hand is `uv run mcp dev main.py`, which opens the
 MCP Inspector where you can call each tool and paste results between steps.
 
+## Agent Skills
+
+The repo also ships **Agent Skills** (under `.claude/skills/`) — playbooks that
+teach an AI agent how to obtain and use decentralized identity. A skill provides
+the *workflow*; the MCP server (or a bundled script) provides the *capability*.
+
+| Skill | What it does | Needs the server? |
+|-------|--------------|-------------------|
+| `agent-identity-local` | Generate a keypair and mint a DID document **locally** (self-sovereign). Bundles a self-contained script that runs with just `uv` (or `python` + `cryptography`). | No — fully standalone / portable |
+| `agent-identity-idm` | Obtain a DID by calling the server's `get_did`; reuses an existing keypair or generates one, then stores the wallet. | Yes (`idm-mcp`) |
+| `agent-credential` | Establish identity and apply for capability Verifiable Credentials (`get_vc`) — one DID, many VCs. | Yes (`idm-mcp`) |
+
+Each skill manages a local **wallet** (`agent_wallet.json`) holding the agent's
+keypair, DID, and credentials. The secret key stays with the agent and is never
+sent to the server.
+
+To use a server-dependent skill, register the MCP server with your client (see
+[Using it from Claude Code](#using-it-from-claude-code)). `agent-identity-local`
+needs nothing but `uv`.
+
 ## Project structure
 
 ```
 idm_mcp/
-├── main.py        # FastMCP server + the get_did / get_vc / verify_vc tools
-├── keygen.py      # Ed25519 key generation + sign/verify primitives (hex-encoded keys)
-├── pyproject.toml # uv project + dependencies
-└── README.md
+├── main.py         # FastMCP server + the get_did / get_vc / verify_vc tools
+├── keygen.py       # Ed25519 key generation + sign/verify primitives (hex-encoded keys)
+├── pyproject.toml  # uv project + dependencies
+├── README.md
+└── .claude/
+    └── skills/     # Agent Skills (agent-identity-local, agent-identity-idm, agent-credential)
 ```
 
 ## Limitations
