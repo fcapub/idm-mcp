@@ -148,9 +148,9 @@ signature, then confirms the current time is within `validFrom`/`validUntil`.
 Returns `{"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}` — with a
 distinct `reason` for a bad signature, an expired credential, or one not yet valid.
 
-> Currently verifies only credentials issued by *this* server (it checks against
-> the server's own issuer key). A DID registry now exists (`resolve_did`), but
-> `verify_vc` is not yet wired to it to verify other issuers.
+> Verifies **any** issuer whose DID is registered (via `get_did`) — it resolves
+> the issuer's public key from its DID document (`resolve_did` + multibase decode).
+> This confirms the credential is *authentic* for its claimed issuer.
 
 ### `resolve_vc(vc_id="")`
 
@@ -239,9 +239,11 @@ idm_mcp/
 
 This is a mock, not production identity infrastructure:
 
-- **In-memory only** — issued VCs and the issuer key are lost on restart.
-- **No DID registry** — DIDs aren't stored, so only this server's own credentials
-  can be verified.
+- **In-memory only** — the DID and VC registries and the issuer key live in
+  process memory and are lost on restart.
+- **Local registry, no external resolution** — verification works only for
+  issuers whose DIDs were registered with *this* server; there is no global/
+  external DID resolution.
 - **`signType` is unused**, and `pktype` is not validated (only `ed25519` is
   actually handled; `pk` is validated to be a 32-byte Ed25519 key).
 - **Canonical JSON signing**, not full JSON-LD Data Integrity canonicalization.
