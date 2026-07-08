@@ -60,40 +60,36 @@ uv export --format requirements-txt --no-hashes > requirements.txt
 ## Running
 
 ```bash
-# Run the server (transport is selected in main(); currently streamable-http,
-# served at http://127.0.0.1:8000/mcp)
+# Run the server (default transport: stdio)
 uv run python main.py
+
+# Serve over Streamable HTTP instead (http://127.0.0.1:8000/mcp)
+uv run python main.py --transport streamable-http
 
 # Develop / test interactively with the MCP Inspector (opens a browser UI)
 uv run mcp dev main.py
 ```
 
-To change the transport, edit the `transport` variable in `main()` (`"stdio"` or
-`"streamable-http"`).
+The transport is chosen with `--transport {stdio,streamable-http}` (default
+`stdio`) — no code edits needed.
 
 ### Using it from Claude Code
 
-**The transport set in `main()` must match how you register the server.** Pick one:
+Pick one — the launch command states the transport, so there's nothing in the
+code to keep in sync:
 
-> Current default in `main()`: **streamable-http** (Option B).
-
-**Option A — stdio** (Claude Code launches the server for you). Set
-`transport = 'stdio'` in `main()`, then:
+**Option A — stdio** (Claude Code launches the server for you):
 
 ```bash
-claude mcp add idm-mcp -- uv --directory /path/to/idm_mcp run python main.py
+claude mcp add idm-mcp -- uv --directory /path/to/idm_mcp run python main.py --transport stdio
 ```
 
-**Option B — streamable-http** (you run the server yourself). Keep
-`transport = 'streamable-http'` in `main()`, start it with `uv run python main.py`,
-then register its URL:
+**Option B — streamable-http** (you run the server yourself, then register the URL):
 
 ```bash
+uv run python main.py --transport streamable-http
 claude mcp add --transport http idm-mcp http://127.0.0.1:8000/mcp
 ```
-
-> Mismatching these fails silently: registering stdio while `main()` serves HTTP
-> means Claude Code waits for stdio messages that never come, and vice versa.
 
 ## Generating a keypair
 

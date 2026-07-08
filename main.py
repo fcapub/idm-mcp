@@ -5,12 +5,14 @@ Exposes tools to mint DIDs (get_did), issue signed Verifiable Credentials
 key and an in-memory VC store. This is a mock: state is not persistent and the
 issuer key is regenerated on every restart.
 
-Run the server (transport is selected in main(), currently streamable-http):
-    uv run python main.py
+Run the server (default transport is stdio; use --transport to change):
+    uv run python main.py                              # stdio
+    uv run python main.py --transport streamable-http  # HTTP on 127.0.0.1:8000/mcp
 
 Develop with the MCP Inspector:
     uv run mcp dev main.py
 """
+import argparse
 import json
 import logging
 import uuid
@@ -360,15 +362,17 @@ def list_credentials(subject: str) -> list:
 
 
 def main() -> None:
-    """Entry point. Runs the server."""
-    logger.info("IDM MCP Server starting...")
-    transport = 'streamable-http'
-    if transport == 'stdio':
-        mcp.run(transport="stdio")
-    elif transport == 'streamable-http':
-        mcp.run(transport="streamable-http")
-    else:
-        logger.error("Invalid transport.")
+    """Entry point. Runs the server over the transport chosen on the CLI."""
+    parser = argparse.ArgumentParser(description="IDM MCP Server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "streamable-http"],
+        default="stdio",
+        help="MCP transport to serve (default: stdio)",
+    )
+    args = parser.parse_args()
+    logger.info("IDM MCP Server starting (transport=%s)...", args.transport)
+    mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":
