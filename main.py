@@ -262,14 +262,15 @@ def get_vc(
 
 @mcp.tool()
 def verify_vc(vc: dict) -> dict:
-    """Verify the issuer signature on a Verifiable Credential.
+    """Verify the issuer signature and validity window of a Verifiable Credential.
 
-    Rebuilds the exact bytes that were signed (the VC with 'proof' reset to ""),
-    resolves the issuer's public key, and checks the Ed25519 signature held in
-    proof.proofValue.
+    Resolves the issuer's public key from its DID document in the DID registry
+    (so ANY issuer registered via get_did can be verified, not just this server),
+    rebuilds the exact bytes that were signed (the VC with 'proof' reset to ""),
+    checks the Ed25519 signature in proof.proofValue, then the validity window.
 
-    NOTE (mock): only credentials issued by THIS server are verifiable, because
-    other issuers' DIDs are not yet resolvable (no DID registry).
+    This confirms the credential is AUTHENTIC for its claimed issuer; it does NOT
+    assess whether that issuer is trusted or authorized (a separate concern).
 
     Returns {"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}.
     A credential is valid only if the signature checks out AND the current time
@@ -279,12 +280,16 @@ def verify_vc(vc: dict) -> dict:
     if not isinstance(proof, dict) or not proof.get("proofValue"):
         return {"valid": False, "reason": "credential has no proof / proofValue"}
 
-    # Resolve the issuer's verification key. Real resolution would fetch the
-    # issuer's DID document; for now only this server's issuer key is available.
+    # Resolve the issuer's public key from its DID document in the registry.
+    # Works for ANY issuer whose DID was registered via get_did.
     issuer_did = proof.get("verificationMethod", "").split("#")[0]
-    if issuer_did != _ISSUER_DID:
+    issuer_doc = _did_registry.get(issuer_did)
+    if issuer_doc is None:
         return {"valid": False, "reason": f"cannot resolve issuer {issuer_did!r}"}
-    issuer_pk = _ISSUER_PK
+    try:
+        issuer_pk = multibase_to_hex(issuer_doc["authentication"]["publicKeyMultibase"])
+    except (KeyError, TypeError, ValueError) as exc:
+        return {"valid": False, "reason": f"issuer DID document has no usable key: {exc}"}
 
     result = {
         "valid": False,
