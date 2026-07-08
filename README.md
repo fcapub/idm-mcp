@@ -11,8 +11,11 @@ verify them — over the [Model Context Protocol](https://modelcontextprotocol.i
 ## Features
 
 - `get_did` — mint a `did:ietf:<uuid>` identifier + record from an agent's public key.
+- `resolve_did` — look up a DID document by DID, or list all registered DIDs.
 - `get_vc` — issue an Ed25519-signed Verifiable Credential for a subject DID, and store it.
-- `verify_vc` — verify the issuer signature on a credential.
+- `verify_vc` — verify a credential's issuer signature and validity window.
+- `resolve_vc` — look up a credential by its id, or list all issued credentials.
+- `list_credentials` — list all credentials issued to a subject DID.
 - `ping` / `echo` — trivial health/echo tools used to smoke-test the MCP plumbing.
 
 The server acts as its **own credential issuer**: at startup it generates an
@@ -106,6 +109,17 @@ Creates a DID record from an agent's public key.
 
 Returns the DID record, including its `id` (the DID).
 
+### `resolve_did(did="")`
+
+Looks up a DID document by DID, or lists all registered DID documents.
+
+| Param | Description |
+|-------|-------------|
+| `did` | The DID to resolve. If omitted, returns a list of **all** registered DID documents. |
+
+Returns the matching DID document (when a DID is given) or a list of all
+documents (when omitted). Raises if the DID is unknown.
+
 ### `get_vc(subjectID, content, keyType, signType, usage)`
 
 Issues and stores a Verifiable Credential for a subject DID.
@@ -123,12 +137,37 @@ The credential is signed by the issuer key over a **canonical serialization**
 
 ### `verify_vc(vc)`
 
-Verifies a credential's issuer signature. Rebuilds the exact signed bytes
-(`proof` reset to `""`), resolves the issuer key, and checks the Ed25519
-signature. Returns `{"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}`.
+Verifies a credential's issuer signature **and** its validity window. Rebuilds
+the exact signed bytes (`proof` reset to `""`), checks the Ed25519 signature,
+then confirms the current time is within `validFrom`/`validUntil`. Returns
+`{"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}` — with a
+distinct `reason` for a bad signature, an expired credential, or one not yet valid.
 
-> Only credentials issued by *this* server are verifiable, because other issuers'
-> DIDs are not yet resolvable (no DID registry).
+> Currently verifies only credentials issued by *this* server (it checks against
+> the server's own issuer key). A DID registry now exists (`resolve_did`), but
+> `verify_vc` is not yet wired to it to verify other issuers.
+
+### `resolve_vc(vc_id="")`
+
+Looks up a Verifiable Credential by its id, or lists all issued credentials.
+
+| Param | Description |
+|-------|-------------|
+| `vc_id` | The VC id to resolve. If omitted, returns a list of **all** issued credentials. |
+
+Returns the matching VC (when an id is given) or a list of all VCs (when
+omitted). Raises if the id is unknown.
+
+### `list_credentials(subject)`
+
+Lists all Verifiable Credentials issued to a subject DID.
+
+| Param | Description |
+|-------|-------------|
+| `subject` | The subject DID (`credentialSubject.id`) whose credentials to list. |
+
+Returns a list of that subject's credentials (an **empty list** if it holds none
+— a filter query, so an unknown subject is not an error).
 
 ## Example flow
 
