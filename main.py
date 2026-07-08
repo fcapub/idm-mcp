@@ -82,6 +82,13 @@ def echo(message: str) -> str:
     """Echo back the provided message. Useful for testing argument passing."""
     return message
 
+
+# In-memory store of DID documents, keyed by DID. Defined BEFORE get_did because
+# get_did writes to it, and get_did is called at import time to mint the issuer's
+# own DID (below). Mock: not persistent, resets on restart.
+_did_registry: dict[str, dict] = {}
+
+
 @mcp.tool()
 def get_did(
     entity_type: str,
@@ -138,6 +145,9 @@ def get_did(
         'transparency': transparency,
         'verifiableCredentialHash': vch
     }
+
+    # Register the DID document so it can be resolved later by its DID.
+    _did_registry[did_id] = did
 
     return did
 
