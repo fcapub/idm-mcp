@@ -320,6 +320,40 @@ def verify_vc(vc: dict) -> dict:
     return {**result, "valid": True}
 
 
+@mcp.tool()
+def resolve_vc(vc_id: str = "") -> dict | list:
+    """Resolve a Verifiable Credential by its id, or list all issued credentials.
+
+    Parameters:
+        vc_id: the VC id to resolve. If omitted/empty, returns a list of every
+               issued credential.
+
+    Returns the matching VC (dict) when a vc_id is given, or a list of all VCs
+    when none is given. Raises ValueError if the vc_id is unknown.
+    """
+    if not vc_id:
+        return list(_vc_registry.values())
+    if vc_id not in _vc_registry:
+        raise ValueError(f"unknown VC id: {vc_id}")
+    return _vc_registry[vc_id]
+
+
+@mcp.tool()
+def list_credentials(subject: str) -> list:
+    """List all Verifiable Credentials issued to a subject DID.
+
+    Parameters:
+        subject: the subject DID (credentialSubject.id) whose credentials to list.
+
+    Returns a list of VCs whose credentialSubject.id matches `subject`
+    (an empty list if the subject holds none).
+    """
+    return [
+        vc for vc in _vc_registry.values()
+        if vc.get("credentialSubject", {}).get("id") == subject
+    ]
+
+
 def main() -> None:
     """Entry point. Runs the server."""
     logger.info("IDM MCP Server starting...")
