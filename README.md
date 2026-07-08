@@ -113,9 +113,9 @@ Returns the DID record, including its `id` (the DID).
 
 Looks up a DID document by DID, or lists all registered DID documents.
 
-| Param | Description |
-|-------|-------------|
-| `did` | The DID to resolve. If omitted, returns a list of **all** registered DID documents. |
+| Param | Required | Description |
+|-------|----------|-------------|
+| `did` | no | The DID to resolve. If omitted, returns a list of **all** registered DID documents. |
 
 Returns the matching DID document (when a DID is given) or a list of all
 documents (when omitted). Raises if the DID is unknown.
@@ -124,23 +124,28 @@ documents (when omitted). Raises if the DID is unknown.
 
 Issues and stores a Verifiable Credential for a subject DID.
 
-| Param | Description |
-|-------|-------------|
-| `subjectID` | The subject's DID (as minted by `get_did`). |
-| `content` | What the credential grants, e.g. `"callTools"`. |
-| `keyType` | Recorded as the proof's cryptosuite value, e.g. `"Ed25519"`. |
-| `signType` | signature scheme, e.g. "asy"; Reserved (currently unused; only asymmetric signing is performed). |
-| `usage` | Intended use, e.g. `"authorization"`. |
+| Param | Required | Description |
+|-------|----------|-------------|
+| `subjectID` | yes | The subject's DID (as minted by `get_did`). |
+| `content` | yes | What the credential grants, e.g. `"callTools"`. |
+| `keyType` | yes | Recorded as the proof's cryptosuite value, e.g. `"Ed25519"`. |
+| `signType` | yes | signature scheme, e.g. "asy"; Reserved (currently unused; only asymmetric signing is performed). |
+| `usage` | yes | Intended use, e.g. `"authorization"`. |
 
 The credential is signed by the issuer key over a **canonical serialization**
 (sorted-key compact JSON, with `proof` empty at signing time).
 
 ### `verify_vc(vc)`
 
-Verifies a credential's issuer signature **and** its validity window. Rebuilds
-the exact signed bytes (`proof` reset to `""`), checks the Ed25519 signature,
-then confirms the current time is within `validFrom`/`validUntil`. Returns
-`{"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}` — with a
+Verifies a credential's issuer signature **and** its validity window.
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `vc` | yes | The Verifiable Credential (as returned by `get_vc`) to verify. |
+
+Rebuilds the exact signed bytes (`proof` reset to `""`), checks the Ed25519
+signature, then confirms the current time is within `validFrom`/`validUntil`.
+Returns `{"valid": bool, "issuer": ..., "subjectId": ..., "reason": ...}` — with a
 distinct `reason` for a bad signature, an expired credential, or one not yet valid.
 
 > Currently verifies only credentials issued by *this* server (it checks against
@@ -151,9 +156,9 @@ distinct `reason` for a bad signature, an expired credential, or one not yet val
 
 Looks up a Verifiable Credential by its id, or lists all issued credentials.
 
-| Param | Description |
-|-------|-------------|
-| `vc_id` | The VC id to resolve. If omitted, returns a list of **all** issued credentials. |
+| Param | Required | Description |
+|-------|----------|-------------|
+| `vc_id` | no | The VC id to resolve. If omitted, returns a list of **all** issued credentials. |
 
 Returns the matching VC (when an id is given) or a list of all VCs (when
 omitted). Raises if the id is unknown.
@@ -162,9 +167,9 @@ omitted). Raises if the id is unknown.
 
 Lists all Verifiable Credentials issued to a subject DID.
 
-| Param | Description |
-|-------|-------------|
-| `subject` | The subject DID (`credentialSubject.id`) whose credentials to list. |
+| Param | Required | Description |
+|-------|----------|-------------|
+| `subject` | yes | The subject DID (`credentialSubject.id`) whose credentials to list. |
 
 Returns a list of that subject's credentials (an **empty list** if it holds none
 — a filter query, so an unknown subject is not an error).
