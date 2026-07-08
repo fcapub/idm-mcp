@@ -152,6 +152,24 @@ def get_did(
     return did
 
 
+@mcp.tool()
+def resolve_did(did: str = "") -> dict | list:
+    """Resolve a DID to its DID document, or list all registered DID documents.
+
+    Parameters:
+        did: the DID to resolve, e.g. "did:ietf:...". If omitted/empty, returns
+             a list of every DID document currently registered.
+
+    Returns the matching DID document (dict) when a DID is given, or a list of
+    all DID documents when none is given. Raises ValueError if the DID is unknown.
+    """
+    if not did:
+        return list(_did_registry.values())
+    if did not in _did_registry:
+        raise ValueError(f"unknown DID: {did}")
+    return _did_registry[did]
+
+
 # Issuer identity: the server mints its OWN DID by calling the get_did tool,
 # treating itself as just another entity (entity_type="IDM"). This must come
 # after get_did is defined. NOTE (mock): regenerates on every restart; the
